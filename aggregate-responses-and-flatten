@@ -1,0 +1,34 @@
+import com.sap.gateway.ip.core.customdev.util.Message
+import groovy.json.JsonSlurper
+import groovy.json.JsonOutput
+
+/*
+Input:
+- [{"firstPayload": "firstPayload1"}]
+
+Properties:
+- secondPayload
+- {"secondPayload": "secondPayload"}
+*/
+
+
+Message processData(Message message) {
+    def body1 = message.getBody(String)
+    def body2 = message.getProperties()?.get("secondPayload")
+
+    if (!body1 || !body2) {
+        throw new IllegalArgumentException("Text must not be null or empty")
+    }
+
+    def jsonSlurper = new JsonSlurper()
+    def parsedBody1 = jsonSlurper.parseText(body1)
+    def parsedBody2 = jsonSlurper.parseText(body2)
+
+    def combinedArray = [parsedBody1, parsedBody2].flatten()
+
+    def result = JsonOutput.toJson(combinedArray)
+
+    message.setBody(result)
+    
+    return message
+}
