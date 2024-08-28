@@ -1,0 +1,54 @@
+import com.sap.gateway.ip.core.customdev.util.Message
+import groovy.json.JsonSlurper
+import groovy.json.JsonOutput
+
+Message processData(Message message) {
+    def sourceJson = '''
+{
+    "order": {
+        "id": "12345",
+        "customer": {
+            "name": "John Doe",
+            "address": {
+                "street": "123 Main St",
+                "city": "Anytown"
+            }
+        },
+        "items": [
+            {"product": "Widget", "quantity": 4},
+            {"product": "Gadget", "quantity": 2}
+        ]
+    }
+}
+'''
+    // Sample target JSON payload structure
+    def targetJson = '''
+{
+    "orderId": "",
+    "customerName": "",
+    "customerAddress": {
+        "street": "",
+        "city": ""
+    },
+    "orderItems": []
+}
+'''
+    // Parse the JSON payloads
+    def source = new JsonSlurper().parseText(sourceJson)
+    def target = new JsonSlurper().parseText(targetJson)
+    // Map fields from source to target
+    target.orderId = source.order.id
+    target.customerName = source.order.customer.name
+    target.customerAddress.street = source.order.customer.address.street
+    target.customerAddress.city = source.order.customer.address.city
+    source.order.items.each {
+        item -> target.orderItems << [
+            "productName": item.product,
+            "quantity": item.quantity
+        ]
+    }
+    // Convert the target payload back to JSON
+    def resultJson = JsonOutput.toJson(target)
+    message.setBody(resultJson)
+    return message
+}
